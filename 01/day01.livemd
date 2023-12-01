@@ -105,7 +105,7 @@ defmodule B do
     do: [char - ?0 | get_digits(rest)]
 
   # but also check if "spelled out" digits
-  for {digit, index} <- Enum.with_index(~w[one two three four five six seven eight nine], 1) do
+  for {digit, index} <- Enum.with_index(~w[zero one two three four five six seven eight nine]) do
     def get_digits(unquote(digit) <> _ = rest) do
       [unquote(index) | get_digits(String.slice(rest, 1..-1))]
     end
