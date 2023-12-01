@@ -30,14 +30,18 @@ In this example, the calibration values of these four lines are 12, 38, 15, and 
 ```elixir
 defmodule A do
   @doc """
-  iex> A.get_code("1abc3")
-  13
+  iex> A.get_code("pqr3stu8vwx")
+  38
+  iex> A.get_code("treb7uchet")
+  77
   """
 
   def get_code(input) do
-    code_from_numbers(get_digits(input))
+    get_digits(input)
+    |> merge_to_number
   end
 
+  # Recursively check each char to find digits 0-9
   def get_digits(<<>>), do: []
 
   def get_digits(<<char, rest::binary>>) when char >= ?0 and char <= ?9,
@@ -45,8 +49,8 @@ defmodule A do
 
   def get_digits(<<_, rest::binary>>), do: get_digits(rest)
 
-  def code_from_numbers(numbers) do
-    hd(Enum.reverse(numbers)) + hd(numbers) * 10
+  def merge_to_number(digits) do
+    hd(Enum.reverse(digits)) + hd(digits) * 10
   end
 end
 ```
@@ -63,3 +67,51 @@ input
 ```
 
 ## Part 2
+
+```elixir
+defmodule B do
+  @doc """
+  iex> B.get_code("oneabc2xtwo")
+  12
+  iex> B.get_code("oneone")
+  11
+  """
+
+  def get_code(input) do
+    get_digits(input)
+    |> A.merge_to_number()
+  end
+
+  # Recursively check each char to find digits 0-9
+  # but also check if "spelled out" digits
+  def get_digits(<<>>), do: []
+
+  def get_digits(<<char, rest::binary>>) when char >= ?0 and char <= ?9,
+    do: [char - ?0 | get_digits(rest)]
+
+  def get_digits("one" <> rest), do: [1 | get_digits("ne" <> rest)]
+  def get_digits("two" <> rest), do: [2 | get_digits("wo" <> rest)]
+  def get_digits("three" <> rest), do: [3 | get_digits("hree" <> rest)]
+  def get_digits("four" <> rest), do: [4 | get_digits("our" <> rest)]
+  def get_digits("five" <> rest), do: [5 | get_digits("ive" <> rest)]
+  def get_digits("six" <> rest), do: [6 | get_digits("ix" <> rest)]
+  def get_digits("seven" <> rest), do: [7 | get_digits("even" <> rest)]
+  def get_digits("eight" <> rest), do: [8 | get_digits("ight" <> rest)]
+  def get_digits("nine" <> rest), do: [9 | get_digits("ine" <> rest)]
+  def get_digits(<<_, rest::binary>>), do: get_digits(rest)
+end
+```
+
+```elixir
+example2 = File.stream!(Path.join(__DIR__, "example2.txt"))
+
+example2
+|> Stream.map(&B.get_code/1)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Stream.map(&B.get_code/1)
+|> Enum.sum()
+```
