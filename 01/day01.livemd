@@ -99,21 +99,18 @@ defmodule B do
   end
 
   # Recursively check each char to find digits 0-9
-  # but also check if "spelled out" digits
   def get_digits(<<>>), do: []
 
   def get_digits(<<char, rest::binary>>) when char >= ?0 and char <= ?9,
     do: [char - ?0 | get_digits(rest)]
 
-  def get_digits("one" <> rest), do: [1 | get_digits("ne" <> rest)]
-  def get_digits("two" <> rest), do: [2 | get_digits("wo" <> rest)]
-  def get_digits("three" <> rest), do: [3 | get_digits("hree" <> rest)]
-  def get_digits("four" <> rest), do: [4 | get_digits("our" <> rest)]
-  def get_digits("five" <> rest), do: [5 | get_digits("ive" <> rest)]
-  def get_digits("six" <> rest), do: [6 | get_digits("ix" <> rest)]
-  def get_digits("seven" <> rest), do: [7 | get_digits("even" <> rest)]
-  def get_digits("eight" <> rest), do: [8 | get_digits("ight" <> rest)]
-  def get_digits("nine" <> rest), do: [9 | get_digits("ine" <> rest)]
+  # but also check if "spelled out" digits
+  for {digit, index} <- Enum.with_index(~w[one two three four five six seven eight nine], 1) do
+    def get_digits(unquote(digit) <> _ = rest) do
+      [unquote(index) | get_digits(String.slice(rest, 1..-1))]
+    end
+  end
+
   def get_digits(<<_, rest::binary>>), do: get_digits(rest)
 end
 ```
