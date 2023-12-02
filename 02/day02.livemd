@@ -46,12 +46,8 @@ defmodule A do
   def game_if_possible(input) do
     [meta, game] = String.split(input, ":")
 
-    picks = String.split(game, [";", ", ", " "], trim: true)
-
     impossible =
-      picks
-      |> Enum.reverse()
-      |> Enum.chunk_every(2)
+      get_flat_colour_values(game)
       |> Enum.any?(&pick_impossible?(&1))
 
     if impossible do
@@ -59,6 +55,13 @@ defmodule A do
     else
       get_id(meta)
     end
+  end
+
+  def get_flat_colour_values(game_string) do
+    game_string
+    |> String.split([";", ", ", " "], trim: true)
+    |> Enum.reverse()
+    |> Enum.chunk_every(2)
   end
 
   def pick_impossible?([colour | amount]) when colour == "red",
@@ -129,9 +132,7 @@ defmodule B do
   def minimum_set_of_cubes(input) do
     [_, game] = String.split(input, ":")
 
-    String.split(game, [";", ", ", " "], trim: true)
-    |> Enum.reverse()
-    |> Enum.chunk_every(2)
+    A.get_flat_colour_values(game)
     |> Enum.reduce(%{}, fn [color, value], acc ->
       value = String.to_integer(value)
       min_value = Map.get(acc, color, value)
