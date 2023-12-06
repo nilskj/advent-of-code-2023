@@ -1,0 +1,67 @@
+# Day 06
+
+## Part 1
+
+```elixir
+input = File.read!(Path.join(__DIR__, "input.txt"))
+example = File.read!(Path.join(__DIR__, "example.txt"))
+```
+
+```elixir
+defmodule A do
+  @doc """
+  iex> A.parse("Time:  7 15 30\\nDistance: 9 40 200")
+  [{7, 9}, {15, 40}, {30, 200}]
+  """
+  def parse(input) do
+    String.split(input, "\n", trim: true)
+    |> Enum.map(fn line ->
+      Regex.scan(~r/\d+/, line)
+      |> List.flatten()
+      |> Enum.map(&String.to_integer/1)
+    end)
+    |> Enum.zip()
+  end
+
+  @doc """
+  iex> A.winning_distances({7, 9})
+  [10, 12, 12, 10]
+  """
+  def winning_distances({time, distance_record}) do
+    0..time
+    |> Enum.map(&(&1 * (time - &1)))
+    |> Enum.filter(&(&1 > distance_record))
+  end
+end
+```
+
+```elixir
+A.parse(input)
+|> Enum.map(&A.winning_distances(&1))
+|> Enum.map(&Enum.count(&1))
+|> Enum.product()
+```
+
+## Part 2
+
+```elixir
+defmodule B do
+  @doc """
+  iex> B.parse("Time:  7 15 30\\nDistance: 9 40 200")
+  [71530, 940200]
+  """
+  def parse(input) do
+    String.split(input, "\n", trim: true)
+    |> Enum.map(fn line ->
+      Regex.scan(~r/\d+/, line)
+      |> Enum.join()
+      |> String.to_integer()
+    end)
+  end
+end
+```
+
+```elixir
+[time, distance] = B.parse(input)
+A.winning_distances({time, distance}) |> Enum.count()
+```

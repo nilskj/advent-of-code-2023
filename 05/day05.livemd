@@ -1,0 +1,117 @@
+# Day 05
+
+## Part 1
+
+With this map, you can look up the soil number required for each initial seed number:
+
+```
+Seed number 79 corresponds to soil number 81.
+Seed number 14 corresponds to soil number 14.
+Seed number 55 corresponds to soil number 57.
+Seed number 13 corresponds to soil number 13.
+```
+
+The gardener and his team want to get started as soon as possible, so they'd like to know the closest location that needs a seed. Using these maps, find the lowest location number that corresponds to any of the initial seeds. To do this, you'll need to convert each seed number through other categories until you can find its corresponding location number. In this example, the corresponding types are:
+
+Seed 79, soil 81, fertilizer 81, water 81, light 74, temperature 78, humidity 78, location **82**.
+
+Seed 14, soil 14, fertilizer 53, water 49, light 42, temperature 42, humidity 43, location **43**.
+
+Seed 55, soil 57, fertilizer 57, water 53, light 46, temperature 82, humidity 82, location **86**.
+
+Seed 13, soil 13, fertilizer 52, water 41, light 34, temperature 34, humidity 35, location **35**.
+
+So, the lowest location number in this example is 35.
+
+What is the lowest location number that corresponds to any of the initial seed numbers?
+
+```elixir
+input = File.read!(Path.join(__DIR__, "input.txt"))
+example = File.read!(Path.join(__DIR__, "example.txt"))
+```
+
+```elixir
+defmodule A do
+  def parse(input) do
+    ["seeds: " <> seeds | maps] = String.split(input, "\n\n", trim: true)
+
+    seed_numbers = String.split(seeds, " ") |> Enum.map(&String.to_integer(&1))
+
+    sorted_mappings =
+      maps
+      |> Enum.map(fn map ->
+        [_, mapping] = String.split(map, ":\n", trim: true)
+
+        for line <- String.split(mapping, "\n", trim: true) do
+          [destination, source, length] =
+            String.split(line, " ") |> Enum.map(&String.to_integer/1)
+
+          {source, source + length - 1, source - destination}
+        end
+        |> Enum.sort_by(&elem(&1, 0))
+      end)
+
+    {seed_numbers, sorted_mappings}
+  end
+
+  def source_to_destination(maps, source) do
+    source -
+      Enum.find_value(maps, 0, fn {start, stop, diff} ->
+        source in start..stop && diff
+      end)
+  end
+end
+```
+
+```elixir
+{seeds, mapping} = A.parse(input)
+
+seeds
+|> Enum.map(fn seed ->
+  Enum.reduce(mapping, seed, &A.source_to_destination/2)
+end)
+|> Enum.min()
+```
+
+## Part 2
+
+```elixir
+defmodule B do
+  def map(ranges, []), do: ranges
+
+  def map(ranges, [mapping | rest]) do
+    Enum.flat_map(ranges, &map_to(&1, mapping)) |> map(rest)
+  end
+
+  def map_to(range, []), do: [range]
+
+  def map_to({start, stop}, [{source_start, source_stop, translation} | rest]) do
+    cond do
+      start >= source_start and stop <= source_stop ->
+        [{start - translation, stop - translation}]
+
+      start < source_start and stop in source_start..source_stop ->
+        [
+          {start, source_start - 1},
+          {source_start - translation, stop - translation}
+        ]
+
+      start in source_start..source_stop ->
+        [{start - translation, source_stop - translation} | map_to({source_stop + 1, stop}, rest)]
+
+      true ->
+        map_to({start, stop}, rest)
+    end
+  end
+end
+```
+
+```elixir
+{seed_ranges, mapping} = A.parse(input)
+
+Enum.chunk_every(seed_ranges, 2)
+|> Enum.map(fn [start, count] -> {start, start + count - 1} end)
+|> B.map(mapping)
+|> Enum.map(&elem(&1, 0))
+|> Enum.min()
+```
